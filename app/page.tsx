@@ -1,95 +1,94 @@
+"use client";
+
+import { useState, useRef } from "react";
+import QRCode from "qrcode";
 import Image from "next/image";
-import styles from "./page.module.css";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [url, setUrl] = useState("");
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [size, setSize] = useState(256);
+  const [errorCorrection, setErrorCorrection] = useState<"L" | "M" | "Q" | "H">(
+    "M"
+  );
+  const downloadLink = useRef<HTMLAnchorElement>(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  const generateQR = async () => {
+    if (!url) return alert("Please enter a URL");
+    try {
+      const dataUrl = await QRCode.toDataURL(url, {
+        width: size,
+        errorCorrectionLevel: errorCorrection,
+      });
+      setQrDataUrl(dataUrl);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate QR");
+    }
+  };
+
+  const downloadQR = () => {
+    if (!qrDataUrl || !downloadLink.current) return;
+    downloadLink.current.href = qrDataUrl;
+    downloadLink.current.download = "qrcode.png";
+    downloadLink.current.click();
+  };
+
+  return (
+    <div className="container">
+      <h1>QR Code Generator</h1>
+      <label>
+        Enter URL:
+        <input
+          type="text"
+          placeholder="https://example.com"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Size (px):
+        <input
+          type="number"
+          value={size}
+          onChange={(e) => setSize(Number(e.target.value))}
+        />
+      </label>
+
+      <label>
+        Error Correction Level:
+        <select
+          value={errorCorrection}
+          onChange={(e) =>
+            setErrorCorrection(e.target.value as "L" | "M" | "Q" | "H")
+          }
         >
+          <option value="L">L (Low - 7%)</option>
+          <option value="M">M (Medium - 15%)</option>
+          <option value="Q">Q (Quartile - 25%)</option>
+          <option value="H">H (High - 30%)</option>
+        </select>
+      </label>
+
+      <button onClick={generateQR} className="generate">
+        Generate QR
+      </button>
+
+      {qrDataUrl && (
+        <>
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src={qrDataUrl}
+            alt="Generated QR Code"
+            width={size}
+            height={size}
           />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <button onClick={downloadQR} className="download">
+            Download PNG
+          </button>
+          <a ref={downloadLink} className="hidden" />
+        </>
+      )}
     </div>
   );
 }
