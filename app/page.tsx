@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import QRCode from "qrcode";
-import Image from "next/image";
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -77,7 +76,8 @@ export default function Home() {
 
       {qrDataUrl && (
         <>
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={qrDataUrl}
             alt="Generated QR Code"
             width={size}
